@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/nvidia/Dumindu/word2vec/log/model.ckpt"
+all_model_checkpoint_paths: "/home/nvidia/Dumindu/word2vec/log/model.ckpt"
