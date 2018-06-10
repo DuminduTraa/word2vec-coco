@@ -338,7 +338,11 @@ try:
   #low_dim_embs = tsne.fit_transform(final_embeddings[:plot_only, :])
   #labels = [reverse_dictionary[i] for i in xrange(plot_only)]
 
-  labels = ["UNK", "the", "of", "zero", "to", "in", "one", "nine", "and", "a", "man", "king", "woman", "queen"]
+  word_file =  open("words", "r")
+  labels = word_file.read().split('\n')
+  labels = labels[:len(labels)-1]
+  #print(labels)
+  #labels = ["UNK", "the", "of", "zero", "to", "in", "one", "nine", "and", "a", "man", "king", "woman", "queen"]
   coco_embeddings = np.asarray([final_embeddings[dictionary[str], :] for str in labels])
   low_dim_embs = tsne.fit_transform(coco_embeddings)
 
