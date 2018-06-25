@@ -27,6 +27,8 @@ import random
 from tempfile import gettempdir
 import zipfile
 
+import json
+
 import numpy as np
 from six.moves import urllib
 from six.moves import xrange  # pylint: disable=redefined-builtin
@@ -71,7 +73,7 @@ def maybe_download(filename, expected_bytes):
   return local_filename
 
 
-filename = maybe_download('text8.zip', 31344016)
+#filename = maybe_download('text8.zip', 31344016)
 
 
 # Read the data into a list of strings.
@@ -81,8 +83,23 @@ def read_data(filename):
     data = tf.compat.as_str(f.read(f.namelist()[0])).split()
   return data
 
+def read_data_from_coco_captions(file1, file2):
+	data = []
+	with open(file1) as f:
+		dict1 = json.load(f)
+	
+	for item in dict1['annotations']:
+		data += tf.compat.as_str(item['caption']).split()
 
-vocabulary = read_data(filename)
+	with open(file2) as f2:
+		dict2 = json.load(f2)
+
+	for item in dict2['annotations']:
+		data += tf.compat.as_str(item['caption']).split()
+	return data	
+
+#vocabulary = read_data(filename)
+vocabulary = read_data_from_coco_captions('captions_train2017.json', 'captions_val2017.json')
 print('Data size', len(vocabulary))
 
 # Step 2: Build the dictionary and replace rare words with UNK token.
@@ -241,7 +258,7 @@ with graph.as_default():
   saver = tf.train.Saver()
 
 # Step 5: Begin training.
-num_steps = 100001
+num_steps = 200001
 
 with tf.Session(graph=graph) as session:
   # Open a writer to write summaries.
@@ -334,15 +351,17 @@ try:
   tsne = TSNE(
       perplexity=30, n_components=2, init='pca', n_iter=5000, method='exact')
   
-  #plot_only = 10
+  #plot_only = 200
   #low_dim_embs = tsne.fit_transform(final_embeddings[:plot_only, :])
   #labels = [reverse_dictionary[i] for i in xrange(plot_only)]
 
   word_file =  open("words", "r")
-  labels = word_file.read().split('\n')
-  labels = labels[:len(labels)-1]
+  labels_str = word_file.read()
+  labels = labels_str.split()
+
   #print(labels)
   #labels = ["UNK", "the", "of", "zero", "to", "in", "one", "nine", "and", "a", "man", "king", "woman", "queen"]
+
   coco_embeddings = np.asarray([final_embeddings[dictionary[str], :] for str in labels])
   low_dim_embs = tsne.fit_transform(coco_embeddings)
 
