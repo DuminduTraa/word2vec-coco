@@ -19,6 +19,17 @@ import tensorflow as tf
 
 from tensorflow.contrib.tensorboard.plugins import projector
 
+
+#hyperparamers
+vocabulary_size = 45000
+batch_size = 128
+embedding_size = 128  # Dimension of the embedding vector.
+skip_window = 1  # How many words to consider left and right.
+num_skips = 2  # How many times to reuse an input to generate a label.
+num_sampled = 64  # Number of negative examples to sample.
+num_steps = 200001
+
+
 # Give a folder path as an argument with '--log_dir' to save
 # TensorBoard summaries. Default is a log folder in current directory.
 current_path = os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -44,21 +55,21 @@ def read_data_from_coco_captions(file1, file2):
 		dict1 = json.load(f)
 	
 	for item in dict1['annotations']:
-		data += tf.compat.as_str(item['caption']).split()
+		data += tf.compat.as_str(item['caption']).replace(".","").split()
+		data += ['eos']
 
 	with open(file2) as f2:
 		dict2 = json.load(f2)
 
 	for item in dict2['annotations']:
-		data += tf.compat.as_str(item['caption']).split()
+		data += tf.compat.as_str(item['caption']).replace(".","").split()
+		data += ['eos']
 	return data	
 
 vocabulary = read_data_from_coco_captions('captions_train2017.json', 'captions_val2017.json')
 print('Data size', len(vocabulary))
 
 # Step 2: Build the dictionary and replace rare words with UNK token.
-vocabulary_size = 50000
-
 
 def build_dataset(words, n_words):
   """Process raw inputs into a dataset."""
@@ -89,7 +100,7 @@ data, count, dictionary, reverse_dictionary = build_dataset(
     vocabulary, vocabulary_size)
 del vocabulary  # Hint to reduce memory.
 print('Most common words (+UNK)', count[:5])
-print('Sample data', data[:10], [reverse_dictionary[i] for i in data[:10]])
+print('Sample data', data[:15], [reverse_dictionary[i] for i in data[:15]])
 
 data_index = 0
 
@@ -130,12 +141,6 @@ for i in range(8):
         reverse_dictionary[labels[i, 0]])
 
 # Step 4: Build and train a skip-gram model.
-
-batch_size = 128
-embedding_size = 128  # Dimension of the embedding vector.
-skip_window = 1  # How many words to consider left and right.
-num_skips = 2  # How many times to reuse an input to generate a label.
-num_sampled = 64  # Number of negative examples to sample.
 
 graph = tf.Graph()
 
@@ -199,7 +204,6 @@ with graph.as_default():
   saver = tf.train.Saver()
 
 # Step 5: Begin training.
-num_steps = 20001
 
 with tf.Session(graph=graph) as session:
   # Open a writer to write summaries.
@@ -244,7 +248,7 @@ with tf.Session(graph=graph) as session:
   final_embeddings = normalized_embeddings.eval()
 
   # Write corresponding labels for the embeddings.
-  with open(FLAGS.log_dir + '/metadata.tsv', 'w') as f:
+  with open(current_path + '/vocabulary.tsv', 'w') as f:
     for i in xrange(vocabulary_size):
       f.write(reverse_dictionary[i] + '\n')
 
@@ -261,7 +265,6 @@ with tf.Session(graph=graph) as session:
 writer.close()
 
 # Step 6: Visualize the embeddings.
-
 
 # pylint: disable=missing-docstring
 # Function to draw visualization of distance between embeddings.
