@@ -27,7 +27,7 @@ embedding_size = 128  # Dimension of the embedding vector.
 skip_window = 1  # How many words to consider left and right.
 num_skips = 2  # How many times to reuse an input to generate a label.
 num_sampled = 64  # Number of negative examples to sample.
-num_steps = 200001
+num_steps = 300001
 
 
 # Give a folder path as an argument with '--log_dir' to save
@@ -49,8 +49,9 @@ if not os.path.exists(FLAGS.log_dir):
 
 # Read the data into a list of strings.
 
-def read_data_from_coco_captions(file1, file2):
+def read_data_from_coco_captions(file):
 	data = []
+	"""
 	with open(file1) as f:
 		dict1 = json.load(f)
 	
@@ -64,9 +65,20 @@ def read_data_from_coco_captions(file1, file2):
 	for item in dict2['annotations']:
 		data += tf.compat.as_str(item['caption']).replace(".","").split()
 		data += ['eos']
+
+	"""
+	with open(file) as f:
+		dict_cap = json.load(f)
+
+	for key in dict_cap.keys():
+		captions = dict_cap[key]
+		for item in captions:
+			data += tf.compat.as_str(item).replace(".","").split()
+			data += ['eos']
+		data += ['eop']
 	return data	
 
-vocabulary = read_data_from_coco_captions('captions_train2017.json', 'captions_val2017.json')
+vocabulary = read_data_from_coco_captions('captions.json')
 print('Data size', len(vocabulary))
 
 # Step 2: Build the dictionary and replace rare words with UNK token.
@@ -100,7 +112,7 @@ data, count, dictionary, reverse_dictionary = build_dataset(
     vocabulary, vocabulary_size)
 del vocabulary  # Hint to reduce memory.
 print('Most common words (+UNK)', count[:5])
-print('Sample data', data[:15], [reverse_dictionary[i] for i in data[:15]])
+print('Sample data', data[:100], [reverse_dictionary[i] for i in data[:100]])
 
 data_index = 0
 
