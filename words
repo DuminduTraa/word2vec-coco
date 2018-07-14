@@ -3,7 +3,7 @@ surfboard
 skateboard
 baseball glove
 baseball bat
-Kite
+kite
 sports ball
 snowboard
 skis
@@ -154,6 +154,17 @@ metal
 plastic
 paper
 cardboard
+ground
+solid
+sky
+structural
+building
+food
+textile
+furniture
+floor
+ceiling
+wall
 UNK
 eos
 eop

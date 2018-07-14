@@ -21,13 +21,13 @@ from tensorflow.contrib.tensorboard.plugins import projector
 
 
 #hyperparamers
-vocabulary_size = 45000
+vocabulary_size = 35000
 batch_size = 128
 embedding_size = 128  # Dimension of the embedding vector.
 skip_window = 1  # How many words to consider left and right.
 num_skips = 2  # How many times to reuse an input to generate a label.
 num_sampled = 64  # Number of negative examples to sample.
-num_steps = 300001
+num_steps = 200001
 
 
 # Give a folder path as an argument with '--log_dir' to save
@@ -49,31 +49,28 @@ if not os.path.exists(FLAGS.log_dir):
 
 # Read the data into a list of strings.
 
+def process_sentence(sentence):
+
+	chr_to_be_replaced = ["."]
+	chr_new = [""]
+
+	for i in range(len(chr_to_be_replaced)):
+		sentence = sentence.replace(chr_to_be_replaced[i],chr_new[i])
+
+	sentence = sentence.lower()
+	return sentence
+
 def read_data_from_coco_captions(file):
 	data = []
-	"""
-	with open(file1) as f:
-		dict1 = json.load(f)
 	
-	for item in dict1['annotations']:
-		data += tf.compat.as_str(item['caption']).replace(".","").split()
-		data += ['eos']
-
-	with open(file2) as f2:
-		dict2 = json.load(f2)
-
-	for item in dict2['annotations']:
-		data += tf.compat.as_str(item['caption']).replace(".","").split()
-		data += ['eos']
-
-	"""
 	with open(file) as f:
 		dict_cap = json.load(f)
 
 	for key in dict_cap.keys():
 		captions = dict_cap[key]
 		for item in captions:
-			data += tf.compat.as_str(item).replace(".","").split()
+			processed_sent = process_sentence(item)
+			data += tf.compat.as_str(processed_sent).split()
 			data += ['eos']
 		data += ['eop']
 	return data	
