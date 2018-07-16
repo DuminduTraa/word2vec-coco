@@ -4,6 +4,17 @@
 
 import json
 
+def process_sentence(sentence):
+
+	chr_to_be_replaced = [".", "\"", "-", ",", "'", "!", ";", "?", ":", "`", "(", ")", "[", "]", "/"]
+	chr_new = ["", " \" ", " - ", " , ", " ' ", " ! ", " ; ", " ? ", " : ", " ` ", " ( ", " ) ", " [ ", " ] ", " / "]
+
+	for i in range(len(chr_to_be_replaced)):
+		sentence = sentence.replace(chr_to_be_replaced[i],chr_new[i])
+
+	sentence = sentence.lower()
+	return sentence
+
 
 with open('captions_train2017.json') as in_file:
 	data = json.load(in_file)
@@ -20,10 +31,13 @@ count = 0
 for item in annotations:
 	image_id = item['image_id']
 	caption = item['caption']
+
+	processed_caption = process_sentence(caption)
+	
 	if(image_id in dict_cap.keys()):
-		dict_cap[image_id].append(caption)
+		dict_cap[image_id].append(processed_caption)
 	else:
-		dict_cap[image_id] = [caption]
+		dict_cap[image_id] = [processed_caption]
 	print count
 	count += 1
 

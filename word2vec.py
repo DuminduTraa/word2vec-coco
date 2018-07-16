@@ -21,7 +21,7 @@ from tensorflow.contrib.tensorboard.plugins import projector
 
 
 #hyperparamers
-vocabulary_size = 35000
+vocabulary_size = 27000
 batch_size = 128
 embedding_size = 128  # Dimension of the embedding vector.
 skip_window = 1  # How many words to consider left and right.
@@ -49,17 +49,6 @@ if not os.path.exists(FLAGS.log_dir):
 
 # Read the data into a list of strings.
 
-def process_sentence(sentence):
-
-	chr_to_be_replaced = ["."]
-	chr_new = [""]
-
-	for i in range(len(chr_to_be_replaced)):
-		sentence = sentence.replace(chr_to_be_replaced[i],chr_new[i])
-
-	sentence = sentence.lower()
-	return sentence
-
 def read_data_from_coco_captions(file):
 	data = []
 	
@@ -69,8 +58,7 @@ def read_data_from_coco_captions(file):
 	for key in dict_cap.keys():
 		captions = dict_cap[key]
 		for item in captions:
-			processed_sent = process_sentence(item)
-			data += tf.compat.as_str(processed_sent).split()
+			data += tf.compat.as_str(item).split()
 			data += ['eos']
 		data += ['eop']
 	return data	
