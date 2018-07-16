@@ -49,6 +49,18 @@ if not os.path.exists(FLAGS.log_dir):
 
 # Read the data into a list of strings.
 
+def collect_couples(sentence):
+
+	words_to_be_replaced = ["tennis racket", "baseball glove", "baseball bat", ""]
+	words_new = []
+
+	for i in range(len(chr_to_be_replaced)):
+		sentence = sentence.replace(chr_to_be_replaced[i],chr_new[i])
+
+	sentence = sentence.lower()
+	return sentence
+
+
 def read_data_from_coco_captions(file):
 	data = []
 	
@@ -298,8 +310,20 @@ try:
   labels_str = word_file.read()
   labels = labels_str.split()
 
-  coco_embeddings = np.asarray([final_embeddings[dictionary[str], :] for str in labels])
-  low_dim_embs = tsne.fit_transform(coco_embeddings)
+  coco_embeddings_list = [final_embeddings[dictionary[str], :].tolist() for str in labels]
+  coco_embeddings_dict = dict(zip(labels, coco_embeddings_list))
+  coco_embeddings_array = np.asarray(coco_embeddings_list)
+  
+  #write coco embeddings to file as matrix
+  embedding_file = open("coco_embeddings", 'w')
+  np.savetxt(embedding_file, coco_embeddings_array)
+
+  #write coco embeddings as dictionary
+  with open('coco_embeddings.json', 'w') as out_file:
+  	out_file.write(json.dumps(coco_embeddings_dict))
+ 
+
+  low_dim_embs = tsne.fit_transform(coco_embeddings_array)
 
   plot_with_labels(low_dim_embs, labels, os.path.join(os.getcwd(), 'tsne.png'))
 
