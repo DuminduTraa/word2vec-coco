@@ -49,33 +49,32 @@ if not os.path.exists(FLAGS.log_dir):
 
 # Read the data into a list of strings.
 
-def collect_couples(sentence):
-
-	words_to_be_replaced = ["tennis racket", "baseball glove", "baseball bat", ""]
-	words_new = []
-
-	for i in range(len(chr_to_be_replaced)):
-		sentence = sentence.replace(chr_to_be_replaced[i],chr_new[i])
-
-	sentence = sentence.lower()
+def collect_couples(sentence, words_to_be_replaced, words_new):
+	for i in range(len(words_to_be_replaced)):
+		sentence = sentence.replace(words_to_be_replaced[i],words_new[i])
 	return sentence
 
 
-def read_data_from_coco_captions(file):
+def read_data_from_coco_captions():
 	data = []
+	with open("word_couples", "r") as file:
+		words_to_be_replaced = file.read().split("\n")[:-1]
+		words_new = [item.replace(" ", "") for item in words_to_be_replaced]
+		#print(words_new)
 	
-	with open(file) as f:
+	with open('captions.json', 'r') as f:
 		dict_cap = json.load(f)
 
 	for key in dict_cap.keys():
 		captions = dict_cap[key]
 		for item in captions:
+			item = collect_couples(item, words_to_be_replaced, words_new)
 			data += tf.compat.as_str(item).split()
 			data += ['eos']
 		data += ['eop']
 	return data	
 
-vocabulary = read_data_from_coco_captions('captions.json')
+vocabulary = read_data_from_coco_captions()
 print('Data size', len(vocabulary))
 
 # Step 2: Build the dictionary and replace rare words with UNK token.
@@ -108,8 +107,8 @@ def build_dataset(words, n_words):
 data, count, dictionary, reverse_dictionary = build_dataset(
     vocabulary, vocabulary_size)
 del vocabulary  # Hint to reduce memory.
-print('Most common words (+UNK)', count[:5])
-print('Sample data', data[:100], [reverse_dictionary[i] for i in data[:100]])
+#print('Most common words (+UNK)', count[:5])
+#print('Sample data', data[:100], [reverse_dictionary[i] for i in data[:100]])
 
 data_index = 0
 
@@ -199,7 +198,6 @@ with graph.as_default():
   with tf.name_scope('optimizer'):
     optimizer = tf.train.GradientDescentOptimizer(1.0).minimize(loss)
 
-  # Compute the cosine similarity between minibatch examples and all embeddings.
   norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keepdims=True))
   normalized_embeddings = embeddings / norm
    
@@ -317,6 +315,11 @@ try:
   #write coco embeddings to file as matrix
   embedding_file = open("coco_embeddings", 'w')
   np.savetxt(embedding_file, coco_embeddings_array)
+
+  #Calculating cosine similarity matrix and saving to file
+  cosine_sim = np.matmul(coco_embeddings_array, coco_embeddings_array.T)
+  cosine_sim_file = open("cosine_sim", "w")
+  np.savetxt(cosine_sim_file, cosine_sim)
 
   #write coco embeddings as dictionary
   with open('coco_embeddings.json', 'w') as out_file:

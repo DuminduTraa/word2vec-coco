@@ -4,17 +4,6 @@ np.set_printoptions(suppress=True)
 
 cosine_sim_thres = 0.3
 
-embedding_file = open("coco_embeddings", 'r')
-coco_embeddings = np.loadtxt(embedding_file)
-
-
-#Calculating cosine similarity matrix and saving to file
-cosine_sim = np.matmul(coco_embeddings, coco_embeddings.T)
-
-cosine_sim_file = open("cosine_sim", "w")
-np.savetxt(cosine_sim_file, cosine_sim)
-
-
 # find anomal word from user input words
 word_file =  open("words", "r")
 labels_str = word_file.read()
