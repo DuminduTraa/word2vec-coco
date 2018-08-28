@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/dumindu/Codes/word2vec-coco/log/model.ckpt"
+all_model_checkpoint_paths: "/home/dumindu/Codes/word2vec-coco/log/model.ckpt"

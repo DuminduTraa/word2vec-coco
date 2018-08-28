@@ -54,6 +54,18 @@ def collect_couples(sentence, words_to_be_replaced, words_new):
 		sentence = sentence.replace(words_to_be_replaced[i],words_new[i])
 	return sentence
 
+def remove_freq(sentence):
+
+	words_to_be_replaced = [" a ", " on ", " of ", " the ", " in ", " with ", " and ", " is ", 
+	" man ", " to "," sitting ", " an ", " two ", " at ", " standing ", " people ", " are ", " next ", 
+	" white ", " woman ", " that ", " holdin ", " it ", " large ", " some ", " street ", " down ",
+	" top ", " up ", " group ", " small ", " near ", " front ", " black ", " his ",  
+	".", "\"", "-", ",", "'", "!",	 ";", "?", ":", "`", "(", ")", "[", "]", "/"]
+	
+	for i in range(len(words_to_be_replaced)):
+		sentence = sentence.replace(words_to_be_replaced[i]," ")
+	return sentence
+
 
 def read_data_from_coco_captions():
 	data = []
@@ -69,6 +81,7 @@ def read_data_from_coco_captions():
 		captions = dict_cap[key]
 		for item in captions:
 			item = collect_couples(item, words_to_be_replaced, words_new)
+			item = remove_freq(item)
 			data += tf.compat.as_str(item).split()
 			data += ['eos']
 		data += ['eop']
