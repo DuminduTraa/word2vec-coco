@@ -21,7 +21,7 @@ from tensorflow.contrib.tensorboard.plugins import projector
 
 
 #hyperparamers
-vocabulary_size = 27000
+vocabulary_size = 168
 batch_size = 128
 embedding_size = 128  # Dimension of the embedding vector.
 skip_window = 1  # How many words to consider left and right.
@@ -46,6 +46,9 @@ FLAGS, unparsed = parser.parse_known_args()
 if not os.path.exists(FLAGS.log_dir):
   os.makedirs(FLAGS.log_dir)
 
+word_file =  open("words", "r")
+#coco_labels_str = word_file.read()
+coco_labels = word_file.read().split()
 
 # Read the data into a list of strings.
 
@@ -67,7 +70,7 @@ def remove_freq(sentence):
 	return sentence
 
 
-def read_data_from_coco_captions():
+def read_data_from_coco_captions(labels):
 	data = []
 	with open("word_couples", "r") as file:
 		words_to_be_replaced = file.read().split("\n")[:-1]
@@ -81,13 +84,17 @@ def read_data_from_coco_captions():
 		captions = dict_cap[key]
 		for item in captions:
 			item = collect_couples(item, words_to_be_replaced, words_new)
-			item = remove_freq(item)
-			data += tf.compat.as_str(item).split()
-			data += ['eos']
+			#item = remove_freq(item)
+			words_in_item = tf.compat.as_str(item).split()
+			for word in words_in_item:
+				if word in labels:
+					data += [word]
+			#data += words_in_item
+			#data += ['eos']
 		data += ['eop']
 	return data	
 
-vocabulary = read_data_from_coco_captions()
+vocabulary = read_data_from_coco_captions(coco_labels)
 print('Data size', len(vocabulary))
 
 # Step 2: Build the dictionary and replace rare words with UNK token.
@@ -96,6 +103,7 @@ def build_dataset(words, n_words):
   """Process raw inputs into a dataset."""
   count = [['UNK', -1]]
   count.extend(collections.Counter(words).most_common(n_words - 1))
+  print(len(count))
   dictionary = dict()
   for word, _ in count:
     dictionary[word] = len(dictionary)
@@ -119,6 +127,7 @@ def build_dataset(words, n_words):
 # reverse_dictionary - maps codes(integers) to words(strings)
 data, count, dictionary, reverse_dictionary = build_dataset(
     vocabulary, vocabulary_size)
+#print (dictionary)
 del vocabulary  # Hint to reduce memory.
 #print('Most common words (+UNK)', count[:5])
 #print('Sample data', data[:100], [reverse_dictionary[i] for i in data[:100]])
@@ -317,12 +326,9 @@ try:
   #low_dim_embs = tsne.fit_transform(final_embeddings[:plot_only, :])
   #labels = [reverse_dictionary[i] for i in xrange(plot_only)]
 
-  word_file =  open("words", "r")
-  labels_str = word_file.read()
-  labels = labels_str.split()
-
-  coco_embeddings_list = [final_embeddings[dictionary[str], :].tolist() for str in labels]
-  coco_embeddings_dict = dict(zip(labels, coco_embeddings_list))
+  coco_embeddings_list = [final_embeddings[dictionary[str], :].tolist() for str in coco_labels]
+  #print(len(coco_labels),len(coco_embeddings_list), len(dictionary))
+  coco_embeddings_dict = dict(zip(coco_labels, coco_embeddings_list))
   coco_embeddings_array = np.asarray(coco_embeddings_list)
   
   #write coco embeddings to file as matrix
@@ -341,7 +347,7 @@ try:
 
   low_dim_embs = tsne.fit_transform(coco_embeddings_array)
 
-  plot_with_labels(low_dim_embs, labels, os.path.join(os.getcwd(), 'tsne.png'))
+  plot_with_labels(low_dim_embs, coco_labels, os.path.join(os.getcwd(), 'tsne.png'))
 
 except ImportError as ex:
   print('Please install sklearn, matplotlib, and scipy to show embeddings.')
